@@ -47,7 +47,7 @@ col30 = []
 df = pd.read_csv('import.csv', header=0)
 list_ = df.links.to_list()
 
-driver = webdriver.Chrome(options=options, executable_path='/home/tarek/Selenium_Projects/webdrivers/chromedriver')
+driver = webdriver.Chrome(options=options, executable_path='/home/tarek/MY_PROJECTS/Selenium_Projects/webdrivers/chromedriver')
 
 def crawl():
 	for i in list_:
