@@ -281,5 +281,8 @@ def export():
 	df.to_csv (r'polish_export_data_7k_to_8k.csv', index = False, header=True)
 	print (df)
 	
-crawl()
+try:
+	crawl()
+except:
+	export()
 export()
