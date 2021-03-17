@@ -6,6 +6,9 @@ import pandas as pd
 import csv
 import os
 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 options = Options()
 #options.headless = True
 options.add_argument("--no-sandbox")
@@ -13,6 +16,7 @@ options.add_experimental_option("useAutomationExtension", False)
 options.add_experimental_option("excludeSwitches",["enable-automation"])
 options.add_argument("--start-maximized")
 options.add_argument('--ignore-certificate-errors')
+
 col1 = []
 col2 = []
 col3 = []
@@ -43,6 +47,7 @@ col27 = []
 col28 = []
 col29 = []
 col30 = []
+col31 = []
 
 df = pd.read_csv('import.csv', header=0)
 list_ = df.links.to_list()
@@ -53,7 +58,10 @@ def crawl():
 	for i in list_:
 		source_ = f"{i}"
 		driver.get(i)
-		time.sleep(5)
+		try:
+			WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[contains(text(), "Pokaż więcej")]')))
+		except:
+			pass
 		try:
 			more_button = driver.find_element_by_xpath("//section[2]/button/span").click()
 		except:
@@ -185,14 +193,22 @@ def crawl():
 		except:
 			offer_number = 'N/A'
 		try:
-			date_added = driver.find_element_by_xpath("//main/div/div[3]/div[6]/div[3]/font/font").text	
+			date_added = driver.find_element_by_xpath('//*[contains(text(), "Data dodania: ")]').text	
 		except:
 			date_added = 'N/A'
 		try:
 			footer = driver.find_element_by_xpath('//*[@id="__next"]/main/div/div[3]/div[6]/div').text
 		except:
 			footer = 'N/A'
-		
+		try:
+			phone_button = driver.find_element_by_xpath('//div[contains(@class,"phoneNumber")]/button').click()
+			try:
+				WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class,'phoneNumber')]/a")))
+			except:
+				pass
+			phone_number = driver.find_element_by_xpath("//div[contains(@class,'phoneNumber')]/a").text
+		except:
+			phone_number = 'N/A'
 		col1.append(source_)
 		col2.append(title)
 		col3.append(address)
@@ -223,7 +239,8 @@ def crawl():
 		col28.append(third_desc_title)
 		col29.append(fourth_desc_title)
 		col30.append(footer)
-		print(f"{area};,{rooms};,{market};,{_1st_floor};,{buildyng_type};,{floors};,{building_materials};,{windows};,{heating};,{year_of_build};,{trim_condition};,{rent};,{property_type}")
+		col31.append(phone_number)
+		print(f"{title};,{phone_number}")
 
 	driver.quit()
 
@@ -257,10 +274,11 @@ def export():
 	'second_desc_title': col27,
 	'third_desc_title': col28,
 	'fourth_desc_title': col29,
-	'footer': col30
+	'footer': col30,
+	'phone_number':col31
 	}
-	df = pd.DataFrame (data, columns = ['source_', 'title', 'address', 'price', 'price_per_square_meter', 'area', 'rooms', 'market', 'buildyng_type', '_1st_floor', 'floors', 'building_materials', 'windows', 'heating', 'year_of_build', 'trim_condition', 'rent', 'property_type', 'description', 'first_desc_title', 'first_desc', 'second_desc_title', 'second_desc', 'third_desc_title', 'third_desc', 'fourth_desc_title', 'fourth_desc'])
-	df.to_csv (r'polish_export_data.csv', index = False, header=True)
+	df = pd.DataFrame (data, columns = ['source_', 'title', 'address', 'price', 'price_per_square_meter', 'area', 'rooms', 'market', 'buildyng_type', '_1st_floor', 'floors', 'building_materials', 'windows', 'heating', 'year_of_build', 'trim_condition', 'rent', 'property_type', 'description', 'first_desc_title', 'first_desc', 'second_desc_title', 'second_desc', 'third_desc_title', 'third_desc', 'fourth_desc_title', 'fourth_desc','phone_number'])
+	df.to_csv (r'polish_export_data_7k_to_8k.csv', index = False, header=True)
 	print (df)
 	
 crawl()
