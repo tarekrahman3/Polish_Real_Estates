@@ -1,3 +1,5 @@
+
+
 from selenium import webdriver
 import time
 from selenium.webdriver.chrome.options import Options
@@ -5,7 +7,7 @@ from selenium.webdriver.common.keys import Keys
 import pandas as pd
 import csv
 import os
-
+from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -14,9 +16,10 @@ options = Options()
 options.add_argument("--no-sandbox")
 options.add_experimental_option("useAutomationExtension", False)
 options.add_experimental_option("excludeSwitches",["enable-automation"])
-options.add_argument("--start-maximized")
+#options.add_argument("--start-maximized")
 options.add_argument('--ignore-certificate-errors')
 
+start_time = time.perf_counter()
 col1 = []
 col2 = []
 col3 = []
@@ -48,22 +51,69 @@ col28 = []
 col29 = []
 col30 = []
 col31 = []
-
+graph_data = []
+parsed_moment =[]
 df = pd.read_csv('import.csv', header=0)
 list_ = df.links.to_list()
 
-driver = webdriver.Chrome(options=options, executable_path='/home/tarek/MY_PROJECTS/Selenium_Projects/webdrivers/chromedriver')
+def driver_start():
+	driver = webdriver.Chrome(options=options, executable_path='/home/tarek/my_Projects/chromedriver')
+	driver.set_window_size(1366, 768)
+	driver.maximize_window()
+	return driver
+
+
+
+def graphdata():
+	for i in range(2):
+		# Scroll down to bottom
+		driver.execute_script("window.scrollTo(0, document.body.scrollHeight/2+15);")
+		
+	
+	circles = WebDriverWait(driver, 5).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'circle.recharts-dot.recharts-line-dot')))
+
+	grph_data = []
+	for circle in circles:
+		actions = ActionChains(driver)
+		actions.move_to_element(circle).perform()
+		time.sleep(0.005)
+		dat = driver.find_element_by_xpath('//div[contains(@class,"recharts-tooltip-wrapper")]').text
+		grph_data.append(dat)
+	
+	return grph_data
+
+driver = driver_start()
+
 
 def crawl():
 	for i in list_:
 		source_ = f"{i}"
 		driver.get(i)
 		try:
-			WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[contains(text(), "Pokaż więcej")]')))
+			WebDriverWait(driver, 10).until(EC.element_to_be_clickable(By.XPATH, "//span[text()='Pokaż więcej']"))
 		except:
 			pass
 		try:
-			more_button = driver.find_element_by_xpath("//section[2]/button/span").click()
+			driver.find_element_by_xpath('//button[text()="Akceptuję"]').click()
+		except:
+			pass
+		'''try:
+			#WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//button[text()="Pokaż numer"]')))
+			b = driver.find_element_by_xpath('//button[text()="Pokaż numer"]')
+			print(b)
+			b.click()
+			phone_number = driver.find_element_by_xpath('//a[contains(@href,"tel:")]').text
+			print(phone_number)
+		except:
+		phone_number = 'N/A'
+			'''
+		try:
+			graph_info = graphdata()
+		except:
+			graph_info = "N/A"
+		try:
+			# click on more description button 
+			driver.find_element_by_xpath("//span[text()='Pokaż więcej']").click()
 		except:
 			pass
 		try:
@@ -141,7 +191,7 @@ def crawl():
 		except:
 			title = 'N/A'
 		try:
-			address = driver.find_element_by_xpath("//*[@id='__next']/main/div/div[2]/header/div[2]/a").text
+			address = driver.find_element_by_xpath("//a[@href='#map']").text
 		except:
 			address = 'N/A'
 		try:
@@ -200,15 +250,7 @@ def crawl():
 			footer = driver.find_element_by_xpath('//*[@id="__next"]/main/div/div[3]/div[6]/div').text
 		except:
 			footer = 'N/A'
-		try:
-			phone_button = driver.find_element_by_xpath('//div[contains(@class,"phoneNumber")]/button').click()
-			try:
-				WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class,'phoneNumber')]/a")))
-			except:
-				pass
-			phone_number = driver.find_element_by_xpath("//div[contains(@class,'phoneNumber')]/a").text
-		except:
-			phone_number = 'N/A'
+		
 		col1.append(source_)
 		col2.append(title)
 		col3.append(address)
@@ -239,8 +281,10 @@ def crawl():
 		col28.append(third_desc_title)
 		col29.append(fourth_desc_title)
 		col30.append(footer)
-		col31.append(phone_number)
-		print(f"{title};,{phone_number}")
+		#col31.append(phone_number)
+		graph_data.append(graph_info)
+		parsed_moment.append(time.ctime())
+		print(f"{len(col2)+1}: {title}\n\t{graph_info[:3]}")
 
 	driver.quit()
 
@@ -275,14 +319,22 @@ def export():
 	'third_desc_title': col28,
 	'fourth_desc_title': col29,
 	'footer': col30,
-	'phone_number':col31
+	#'phone_number':col31,
+	'graph_info':graph_data,
+	'parsed_moment': parsed_moment
 	}
-	df = pd.DataFrame (data, columns = ['source_', 'title', 'address', 'price', 'price_per_square_meter', 'area', 'rooms', 'market', 'buildyng_type', '_1st_floor', 'floors', 'building_materials', 'windows', 'heating', 'year_of_build', 'trim_condition', 'rent', 'property_type', 'description', 'first_desc_title', 'first_desc', 'second_desc_title', 'second_desc', 'third_desc_title', 'third_desc', 'fourth_desc_title', 'fourth_desc','phone_number'])
-	df.to_csv (r'polish_export_data_7k_to_8k.csv', index = False, header=True)
+	df = pd.DataFrame (data, columns = ['parsed_moment','source_', 'title', 'address', 'price', 'price_per_square_meter', 'area', 'rooms', 'market', 'buildyng_type', '_1st_floor', 'floors', 'building_materials', 'windows', 'heating', 'year_of_build', 'trim_condition', 'rent', 'property_type', 'description', 'first_desc_title', 'first_desc', 'second_desc_title', 'second_desc', 'third_desc_title', 'third_desc', 'fourth_desc_title', 'fourth_desc', 'graph_info'])
+	exprtTime = time.ctime()
+	fname = f"polish_export at{exprtTime}.csv"
+	df.to_csv (fname, index = False, header=True)
 	print (df)
-	
+
+
+
 try:
 	crawl()
 except:
 	export()
 export()
+end_time = time.perf_counter()
+print(end_time-start_time)
