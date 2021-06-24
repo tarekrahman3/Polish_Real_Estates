@@ -1,5 +1,5 @@
 
-
+from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 import time
 from selenium.webdriver.chrome.options import Options
@@ -51,6 +51,11 @@ col28 = []
 col29 = []
 col30 = []
 col31 = []
+col32 = []
+col33 = []
+col34 = []
+col35 = []
+col36 = []
 graph_data = []
 parsed_moment =[]
 df = pd.read_csv('import.csv', header=0)
@@ -62,10 +67,16 @@ def driver_start():
 	driver.maximize_window()
 	return driver
 
+def check_exists_by_xpath(xpath):
+    try:
+        driver.find_element_by_xpath(xpath)
+    except NoSuchElementException:
+        return False
+    return True
 
 
 def graphdata():
-	for i in range(2):
+	for i in range(1):
 		# Scroll down to bottom
 		driver.execute_script("window.scrollTo(0, document.body.scrollHeight/2+15);")
 		
@@ -86,35 +97,30 @@ driver = driver_start()
 
 
 def crawl():
+	driver.get('https://www.otodom.pl/')
+	input('Accept Cookies to continue')
 	for i in list_:
 		source_ = f"{i}"
 		driver.get(i)
+		
 		try:
 			WebDriverWait(driver, 10).until(EC.element_to_be_clickable(By.XPATH, "//span[text()='Pokaż więcej']"))
 		except:
 			pass
-		try:
+		'''try:
 			driver.find_element_by_xpath('//button[text()="Akceptuję"]').click()
 		except:
-			pass
+			pass'''
+		
 		'''try:
-			#WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//button[text()="Pokaż numer"]')))
-			b = driver.find_element_by_xpath('//button[text()="Pokaż numer"]')
-			print(b)
-			b.click()
-			phone_number = driver.find_element_by_xpath('//a[contains(@href,"tel:")]').text
-			print(phone_number)
-		except:
-		phone_number = 'N/A'
-			'''
-		try:
 			graph_info = graphdata()
 		except:
-			graph_info = "N/A"
+			graph_info = "N/A"'''
 		try:
 			# click on more description button 
 			driver.find_element_by_xpath("//span[text()='Pokaż więcej']").click()
 		except:
+			print('Deails click failed')
 			pass
 		try:
 			area = driver.find_elements_by_xpath("//div[contains(@aria-label, 'Powierzchnia')]/div")
@@ -147,7 +153,6 @@ def crawl():
 			floors = floors[1].text
 		except:
 			floors = 'N/A'
-		
 		try:
 			building_materials = driver.find_elements_by_xpath("//div[contains(@aria-label, 'Materiał budynku')]/div")
 			building_materials = building_materials[1].text
@@ -243,14 +248,44 @@ def crawl():
 		except:
 			offer_number = 'N/A'
 		try:
-			date_added = driver.find_element_by_xpath('//*[contains(text(), "Data dodania: ")]').text	
+			date_added = driver.find_element_by_xpath('//div[contains(text(), "Data dodania")]').text	
 		except:
 			date_added = 'N/A'
 		try:
-			footer = driver.find_element_by_xpath('//*[@id="__next"]/main/div/div[3]/div[6]/div').text
+			footer = driver.find_element_by_xpath('//div[contains(text(), "Data aktualizacji")]').text
 		except:
 			footer = 'N/A'
-		
+
+		#try:
+		print('Checking Private Agent')
+		private = driver.find_element_by_xpath('//div[contains(@class,"phoneNumber")]/button')
+		actions = ActionChains(driver)
+		actions.move_to_element(private).perform()
+		private.click()
+		try:
+			WebDriverWait(driver, 2).until(EC.presence_of_all_elements_located(By.XPATH, '//*[@aria-label="Zamknij" and @role="button" and @data-cy="close-modal"]'))
+		except:
+			pass
+		checking=check_exists_by_xpath('//*[@aria-label="Zamknij" and @role="button" and @data-cy="close-modal"]')
+		if checking==True:
+			# it's an agency!!
+			agency_name = driver.find_element_by_xpath('//*[@aria-label="Zamknij"]/../child::div/div[2]/strong').text
+			agency_phone_number = driver.find_element_by_xpath('//*[@aria-label="Zamknij"]/../child::div/div[2]//a[contains(@href,"tel")]').get_attribute('href')
+			agency_agent_phone_number = driver.find_element_by_xpath('//*[@aria-label="Zamknij"]/following::div[contains(@class,"phoneNumber")]/a').get_attribute('href')
+			agency_agent_name = driver.find_element_by_xpath('//*[@aria-label="Zamknij"]/..//span[contains(@class,"contactPersonName")]').text
+			private_name = ''
+			private_number = ''
+		elif checking==False:
+			# its private
+			private_name = driver.find_element_by_xpath('//span[contains(@class,"contactPersonName")]').text
+			private_number = driver.find_element_by_xpath('//div[contains(@class,"phoneNumber")]/a').get_attribute('href')
+			agency_name = ''
+			agency_phone_number = ''
+			agency_agent_phone_number = ''
+			agency_agent_name = ''
+		#except:
+		#	private_name = ''
+		#	private_number = ''
 		col1.append(source_)
 		col2.append(title)
 		col3.append(address)
@@ -281,10 +316,15 @@ def crawl():
 		col28.append(third_desc_title)
 		col29.append(fourth_desc_title)
 		col30.append(footer)
-		#col31.append(phone_number)
-		graph_data.append(graph_info)
+		col31.append(agency_name)
+		col32.append(agency_phone_number)
+		col35.append(agency_agent_phone_number)
+		col36.append(agency_agent_name)
+		col33.append(private_name)
+		col34.append(private_number)
+		#graph_data.append(graph_info)
 		parsed_moment.append(time.ctime())
-		print(f"{len(col2)+1}: {title}\n\t{graph_info[:3]}")
+		print(f"{len(col2)+1}: {title}")
 
 	driver.quit()
 
@@ -319,22 +359,31 @@ def export():
 	'third_desc_title': col28,
 	'fourth_desc_title': col29,
 	'footer': col30,
-	#'phone_number':col31,
-	'graph_info':graph_data,
+	'agency_name':col31,
+	'agency_number':col32,
+	'private_name':col33,
+	'private_number':col34,
+	'agency_agent_phone_number':col35,
+	'agency_agent_name':col36,
+	#'graph_info':graph_data,
 	'parsed_moment': parsed_moment
 	}
-	df = pd.DataFrame (data, columns = ['parsed_moment','source_', 'title', 'address', 'price', 'price_per_square_meter', 'area', 'rooms', 'market', 'buildyng_type', '_1st_floor', 'floors', 'building_materials', 'windows', 'heating', 'year_of_build', 'trim_condition', 'rent', 'property_type', 'description', 'first_desc_title', 'first_desc', 'second_desc_title', 'second_desc', 'third_desc_title', 'third_desc', 'fourth_desc_title', 'fourth_desc', 'graph_info'])
+	df = pd.DataFrame (data, columns = ['parsed_moment','source_', 'title', 'address', 'price', 'price_per_square_meter',
+	'area', 'rooms', 'market', 'buildyng_type', '_1st_floor', 'floors', 'building_materials', 'windows', 'heating', 'year_of_build', 'trim_condition', 'rent', 'property_type',
+	'description', 'first_desc_title', 'first_desc', 'second_desc_title', 'second_desc', 'third_desc_title', 'third_desc', 'fourth_desc_title', 'fourth_desc',
+	'agency_name', 'agency_number','agency_agent_name','agency_agent_phone_number','private_name', 'private_number','footer','date_added'])
 	exprtTime = time.ctime()
 	fname = f"polish_export at{exprtTime}.csv"
 	df.to_csv (fname, index = False, header=True)
-	print (df)
+	print(df)
 
 
 
 try:
 	crawl()
+	export()
 except:
 	export()
-export()
+
 end_time = time.perf_counter()
 print(end_time-start_time)
