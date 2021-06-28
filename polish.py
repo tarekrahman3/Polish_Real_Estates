@@ -1,24 +1,24 @@
 
-from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
-import time
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
-import pandas as pd
-import csv
-import os
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium_stealth import stealth
+import pandas as pd
+import csv
+import os
+import time
+
 options = Options()
-#options.headless = True
 options.add_argument("--no-sandbox")
 options.add_experimental_option("useAutomationExtension", False)
 options.add_experimental_option("excludeSwitches",["enable-automation"])
-#options.add_argument("--start-maximized")
 options.add_argument('--ignore-certificate-errors')
-
+options.add_argument('user-data-dir=Profile')
 start_time = time.perf_counter()
 col1 = []
 col2 = []
@@ -62,7 +62,7 @@ df = pd.read_csv('import.csv', header=0)
 list_ = df.links.to_list()
 
 def driver_start():
-	driver = webdriver.Chrome(options=options, executable_path='/home/tarek/my_Projects/chromedriver')
+	driver = webdriver.Chrome(options=options, executable_path='/chromedriver')
 	driver.set_window_size(1366, 768)
 	driver.maximize_window()
 	return driver
@@ -79,10 +79,7 @@ def graphdata():
 	for i in range(1):
 		# Scroll down to bottom
 		driver.execute_script("window.scrollTo(0, document.body.scrollHeight/2+15);")
-		
-	
 	circles = WebDriverWait(driver, 5).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'circle.recharts-dot.recharts-line-dot')))
-
 	grph_data = []
 	for circle in circles:
 		actions = ActionChains(driver)
@@ -97,8 +94,8 @@ driver = driver_start()
 
 
 def crawl():
-	driver.get('https://www.otodom.pl/')
-	input('Accept Cookies to continue')
+	#driver.get('https://www.otodom.pl/')
+	#input('Accept Cookies to continue')
 	for i in list_:
 		source_ = f"{i}"
 		driver.get(i)
@@ -118,7 +115,8 @@ def crawl():
 			graph_info = "N/A"'''
 		try:
 			# click on more description button 
-			driver.find_element_by_xpath("//span[text()='Pokaż więcej']").click()
+			bn_class = driver.find_element_by_xpath("//span[text()='Pokaż więcej']").get_attribute('class')
+			driver.execute_script(f"var b = document.getElementsByClassName('{bn_class}');b[0].click();")
 		except:
 			print('Deails click failed')
 			pass
@@ -256,36 +254,38 @@ def crawl():
 		except:
 			footer = 'N/A'
 
-		#try:
-		print('Checking Private Agent')
-		private = driver.find_element_by_xpath('//div[contains(@class,"phoneNumber")]/button')
-		actions = ActionChains(driver)
-		actions.move_to_element(private).perform()
-		private.click()
 		try:
-			WebDriverWait(driver, 2).until(EC.presence_of_all_elements_located(By.XPATH, '//*[@aria-label="Zamknij" and @role="button" and @data-cy="close-modal"]'))
+			print('Checking Private Agent')
+			private = driver.find_element_by_xpath('//button[text()="Pokaż numer"]')
+			driver.execute_script(f"var b = document.getElementsByClassName('{private.get_attribute('class')}');b[0].click();")
+			try:
+				WebDriverWait(driver, 2).until(EC.presence_of_all_elements_located(By.XPATH, '//*[@aria-label="Zamknij" and @role="button" and @data-cy="close-modal"]'))
+			except:
+				pass
+			checking=check_exists_by_xpath('//*[@aria-label="Zamknij" and @role="button" and @data-cy="close-modal"]')
+			if checking==True:
+				# it's an agency!!
+				agency_name = driver.find_element_by_xpath('//*[@aria-label="Zamknij"]/../child::div/div[2]/strong').text
+				agency_phone_number = driver.find_element_by_xpath('//*[@aria-label="Zamknij"]/../child::div/div[2]//a[contains(@href,"tel")]').get_attribute('href')
+				agency_agent_phone_number = driver.find_element_by_xpath('//*[@aria-label="Zamknij"]/following::div[contains(@class,"phoneNumber")]/a').get_attribute('href')
+				agency_agent_name = driver.find_element_by_xpath('//*[@aria-label="Zamknij"]/..//span[contains(@class,"contactPersonName")]').text
+				private_name = ''
+				private_number = ''
+			elif checking==False:
+				# its private
+				private_name = driver.find_element_by_xpath('//span[contains(@class,"contactPersonName")]').text
+				private_number = driver.find_element_by_xpath('//div[contains(@class,"phoneNumber")]/a').get_attribute('href')
+				agency_name = ''
+				agency_phone_number = ''
+				agency_agent_phone_number = ''
+				agency_agent_name = ''
 		except:
-			pass
-		checking=check_exists_by_xpath('//*[@aria-label="Zamknij" and @role="button" and @data-cy="close-modal"]')
-		if checking==True:
-			# it's an agency!!
-			agency_name = driver.find_element_by_xpath('//*[@aria-label="Zamknij"]/../child::div/div[2]/strong').text
-			agency_phone_number = driver.find_element_by_xpath('//*[@aria-label="Zamknij"]/../child::div/div[2]//a[contains(@href,"tel")]').get_attribute('href')
-			agency_agent_phone_number = driver.find_element_by_xpath('//*[@aria-label="Zamknij"]/following::div[contains(@class,"phoneNumber")]/a').get_attribute('href')
-			agency_agent_name = driver.find_element_by_xpath('//*[@aria-label="Zamknij"]/..//span[contains(@class,"contactPersonName")]').text
-			private_name = ''
-			private_number = ''
-		elif checking==False:
-			# its private
-			private_name = driver.find_element_by_xpath('//span[contains(@class,"contactPersonName")]').text
-			private_number = driver.find_element_by_xpath('//div[contains(@class,"phoneNumber")]/a').get_attribute('href')
 			agency_name = ''
 			agency_phone_number = ''
 			agency_agent_phone_number = ''
 			agency_agent_name = ''
-		#except:
-		#	private_name = ''
-		#	private_number = ''
+			private_name = ''
+			private_number = ''
 		col1.append(source_)
 		col2.append(title)
 		col3.append(address)
