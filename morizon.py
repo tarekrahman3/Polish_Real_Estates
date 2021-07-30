@@ -60,6 +60,26 @@ for url in list_:
     except:
         Market = 'N/A'
     try:
+        Typ_kuchni = resp.html.xpath('//th[contains(text(),"Typ kuchni:")]/following-sibling::td')[0].text
+    except:
+        Typ_kuchni = 'N/A'
+    try:
+        Czy_łazienka_z_WC = resp.html.xpath('//th[contains(text(),"Czy łazienka z WC:")]/following-sibling::td')[0].text
+    except:
+        Czy_łazienka_z_WC = 'N/A'
+    try:
+        Balkon = resp.html.xpath('//th[contains(text(),"Balkon:")]/following-sibling::td')[0].text
+    except:
+        Balkon = 'N/A'
+    try:
+        Typ_budynku = resp.html.xpath('//th[contains(text(),"Typ budynku:")]/following-sibling::td')[0].text
+    except:
+        Typ_budynku = 'N/A'
+    try:
+        Rok_budowy = resp.html.xpath('//th[contains(text(),"Rok budowy:")]/following-sibling::td')[0].text
+    except:
+        Rok_budowy= 'N/A'
+    try:
         Offer_Number = resp.html.xpath('//th[contains(text(),"Numer oferty:")]/following-sibling::td')[0].text
     except:
         Offer_Number = 'N/A'
@@ -98,6 +118,11 @@ for url in list_:
         'Floor':Floor,
         'Number_of_Floors':Number_of_Floors,
         'Market':Market,
+        'Typ_kuchni':Typ_kuchni,
+        'Czy_łazienka_z_WC':Czy_łazienka_z_WC,
+        'Balkon':Balkon,
+        'Typ_budynku':Typ_budynku,
+        'Rok_budowy':Rok_budowy,
         'Offer_Number':Offer_Number,
         'Updated':Updated,
         'Published':Published,
