@@ -3,7 +3,9 @@ from lxml import html
 import pandas as pd
 import time
 import  re
-df = pd.read_csv('import.csv',header=0)
+from datetime import date, datetime,timedelta
+
+df = pd.read_csv(input('type import filename: '),header=0)
 list_ = df.links.to_list()
 outDict = []
 
@@ -198,4 +200,28 @@ for url in list_:
     outDict.append(data)
     print(f"{len(outDict)} : {Title} - {Price} - {Updated}")
 
-pd.DataFrame(outDict).to_csv(f'morizon export at {time.ctime()}.csv')
+
+
+
+def DateFormat(String):
+    if String==None:
+        return None
+    Yesterday = date.today() - timedelta(days=1)
+    if String=='wczoraj':
+        return Yesterday.strftime('%d/%m/%Y')
+    PL_EN = {'stycznia': 'January','lutego': 'February','marca': 'March','kwietnia': 'April','maja': 'May','czerwca': 'June',
+        'lipca': 'July','sierpnia': 'August','września': 'September','października': 'October','listopada': 'November','grudnia': 'December'}
+    for i in [key for key in PL_EN]:
+        if i in String:
+            return datetime.strptime(String.replace(i,PL_EN[i]),"%d %B %Y").date().strftime('%d/%m/%Y')
+
+def ConvertDateFormat(Dictionary):
+    DF = pd.DataFrame(Dictionary)
+    for i in range(len(df)):
+        A = DF.loc[i, "date_added"]
+        B = DF.loc[i, "date_updated"]
+        DF.loc[i, "date_added"] = DateFormat(str(A))
+        DF.loc[i, "date_updated"]= DateFormat(str(B))
+    return DF
+
+ConvertDateFormat(outDict).to_csv(f'morizon export at {time.ctime()}.csv',index=False)
