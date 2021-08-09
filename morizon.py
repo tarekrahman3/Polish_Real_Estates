@@ -1,15 +1,9 @@
-from datetime import date, datetime, timedelta
 from requests_html import HTMLSession
 from lxml import html
 import pandas as pd
 import time
-import re
-
-
-
-df = pd.read_csv(input('type import filename: '),header=0)
-list_ = df.links.to_list()
-outDict = []
+import  re
+from datetime import date, datetime,timedelta
 
 def DateFormat(String):
     if String==None:
@@ -219,5 +213,8 @@ def GETandPARSE():
         outDict.append(data)
         print(f"{len(outDict)} : {Title} - {Price} - {Updated}")
 
-
+df = pd.read_csv(input('type import filename: '),header=0)
+list_ = df.links.to_list()
+outDict = []
+GETandPARSE()
 ConvertDateFormat(outDict).to_csv(f'morizon export at {time.ctime()}.csv',index=False)
