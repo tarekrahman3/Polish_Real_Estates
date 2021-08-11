@@ -14,7 +14,7 @@ def DateFormat(String):
     PL_EN = {'stycznia': 'January','lutego': 'February','marca': 'March','kwietnia': 'April','maja': 'May','czerwca': 'June',
         'lipca': 'July','sierpnia': 'August','września': 'September','października': 'October','listopada': 'November','grudnia': 'December'}
     for i in [key for key in PL_EN]:
-        if i in String:
+        if i in String.lower():
             return datetime.strptime(String.replace(i,PL_EN[i]),"%d %B %Y").date().strftime('%d/%m/%Y')
 
 def ConvertDateFormat(Dictionary):
@@ -85,7 +85,7 @@ def GETandPARSE():
         except:
             Market = None
         try:
-            Typ_kuchni = resp.html.xpath('//th[contains(text(),"Typ kuchni:")]/following-sibling::td')[0].text
+            Typ_kuchni = resp.html.xpath('//th[contains(text(),"Typ kuchni")]/following-sibling::td')[0].text
         except:
             Typ_kuchni = None
         try:
@@ -110,12 +110,10 @@ def GETandPARSE():
             Offer_Number = None
         try:
             Updated = resp.html.xpath('//th[contains(text(),"Zaktualizowano:")]/following-sibling::td')[0].text
-            #Updated=translator.translate(Upd, src='pl')
         except:
             Updated = None
         try:
             Published = resp.html.xpath('//th[contains(text(),"Opublikowano:")]/following-sibling::td')[0].text
-            #Published=translator.translate(Pub, src='pl')
         except:
             Published = None
         try:
@@ -174,6 +172,43 @@ def GETandPARSE():
             Image_5 = resp.html.xpath('//ul[@class="list-unstyled list-inline imageBoxList"]/li/img/@src')[3]
         except:
             Image_5 = None
+        try:
+            Stan_nieruchomości = resp.html.xpath('//th[contains(text(),"Stan nieruchomości")]/following-sibling::td')[0].text
+        except:
+            Stan_nieruchomości = None
+        try:
+            Liczba_sypialni = resp.html.xpath('//th[contains(text(),"Stan budynku")]/following-sibling::td')[0].text
+        except:
+            Liczba_sypialni = None
+        try:
+            Liczba_łazienek = resp.html.xpath('//th[contains(text(),"Liczba łazienek")]/following-sibling::td')[0].text
+        except:
+            Liczba_łazienek = None
+        try:
+            Forma_własności = resp.html.xpath('//th[contains(text(),"Forma własności")]/following-sibling::td')[0].text
+        except:
+            Forma_własności = None
+        try:
+            Na_biuro = resp.html.xpath('//th[contains(text(),"Na biuro")]/following-sibling::td')[0].text
+        except:
+            Na_biuro = None
+        try:
+            Rodzaj_umowy = resp.html.xpath('//th[contains(text(),"Rodzaj umowy")]/following-sibling::td')[0].text
+        except:
+            Rodzaj_umowy = None
+        try:
+            Taras = resp.html.xpath('//th[contains(text(),"Taras")]/following-sibling::td')[0].text
+        except:
+            Taras = None
+        try:
+            Czy_przy_mieszkaniu_jest_ogródek = resp.html.xpath('//th[contains(text(),"Czy przy mieszkaniu jest ogródek")]/following-sibling::td')[0].text
+        except:
+            Czy_przy_mieszkaniu_jest_ogródek = None
+        try:
+            Wysokość_wnętrza = resp.html.xpath('//th[contains(text(),"Wysokość wnętrza")]/following-sibling::td')[0].text
+        except:
+            Wysokość_wnętrza = None
+
         data = {
             'Source':url,
             'Time':time.ctime(),
@@ -209,9 +244,18 @@ def GETandPARSE():
             'Wyposażenie':Wyposażenie,
             'Media': Media,
             'Materiał_budowlany':Materiał_budowlany,
+            'Stan nieruchomości':Stan_nieruchomości,
+            'Liczba sypialni':Liczba_sypialni,
+            'Liczba łazienek':Liczba_łazienek,
+            'Forma własności':Forma_własności,
+            'Na biuro':Na_biuro,
+            'Rodzaj umowy':Rodzaj_umowy,
+            'Taras':Taras,
+            'Czy przy mieszkaniu jest ogródek':Czy_przy_mieszkaniu_jest_ogródek,
+            'Wysokość wnętrza':Wysokość_wnętrza
         }
         outDict.append(data)
-        print(f"{len(outDict)} : {Title} - {Price} - {Updated}")
+        print(f"{len(outDict)} : {Title} - {Price}")
 
 df = pd.read_csv(input('type import filename: '),header=0)
 list_ = df.links.to_list()
