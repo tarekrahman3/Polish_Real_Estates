@@ -50,7 +50,11 @@ def GETandPARSE():
             Price = None
         try:
             PS = resp.html.xpath('//li[@class="paramIconPriceM2"]/em')[0].text
-            Price_per_Square=int(re.sub(r'\D','',PS))
+            s = PS.replace('\xa0zł',"")
+            t = s.replace(',',".")
+            u = re.sub(r'\s','',t)
+            Price_per_Square = float(u)
+            # "return document.getElementsByClassName('paramIconPriceM2')[0].getElementsByTagName('em')[0].innerText"
         except:
             Price_per_Square = None
         try:
@@ -177,7 +181,7 @@ def GETandPARSE():
         except:
             Stan_nieruchomości = None
         try:
-            Liczba_sypialni = resp.html.xpath('//th[contains(text(),"Stan budynku")]/following-sibling::td')[0].text
+            Liczba_sypialni = resp.html.xpath('//th[contains(text(),"Liczba sypialni")]/following-sibling::td')[0].text
         except:
             Liczba_sypialni = None
         try:
