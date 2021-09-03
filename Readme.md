@@ -4,6 +4,13 @@ wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 sudo apt install ./google-chrome-stable_current_amd64.deb
 sudo apt install xvfb
 xvfb-run .py
+git clone https://github.com/ultrafunkamsterdam/undetected-chromedriver.git
+cd undetected-chromedriver
+sudo python3 setup.py install
+
+
+
+
 
 sudo apt-get install requests-html
 
