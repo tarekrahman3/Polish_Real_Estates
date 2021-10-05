@@ -1,7 +1,7 @@
 Owner: Tarek R.<br></br>
 Contact: https://www.upwork.com/freelancers/~01cb49d3357f7915f8
 
-
+<br></br>
 pip install selenium
 pip3 install undetected-chromedriver
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
